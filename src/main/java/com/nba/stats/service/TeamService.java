@@ -3,11 +3,13 @@ package com.nba.stats.service;
 import com.nba.stats.model.Team;
 import com.nba.stats.repository.TeamRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class TeamService {
 
     private final TeamRepository teamRepository;

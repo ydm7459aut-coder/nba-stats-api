@@ -1,6 +1,6 @@
 package com.nba.stats.controller;
 
-import com.nba.stats.model.PlayerSeasonStats;
+import com.nba.stats.dto.PlayerStatsDTO;
 import com.nba.stats.service.PlayerService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +19,10 @@ public class StatsController {
     }
 
     @GetMapping("/leaders")
-    public Map<String, List<PlayerSeasonStats>> getLeaders(
+    public Map<String, List<PlayerStatsDTO>> getLeaders(
             @RequestParam(defaultValue = "2023-24") String season,
             @RequestParam(defaultValue = "10") int limit) {
-        Map<String, List<PlayerSeasonStats>> leaders = new LinkedHashMap<>();
+        Map<String, List<PlayerStatsDTO>> leaders = new LinkedHashMap<>();
         leaders.put("points", playerService.getTopScorers(season, limit));
         leaders.put("rebounds", playerService.getTopRebounders(season, limit));
         leaders.put("assists", playerService.getTopAssists(season, limit));
@@ -30,21 +30,21 @@ public class StatsController {
     }
 
     @GetMapping("/leaders/points")
-    public List<PlayerSeasonStats> getPointsLeaders(
+    public List<PlayerStatsDTO> getPointsLeaders(
             @RequestParam(defaultValue = "2023-24") String season,
             @RequestParam(defaultValue = "10") int limit) {
         return playerService.getTopScorers(season, limit);
     }
 
     @GetMapping("/leaders/rebounds")
-    public List<PlayerSeasonStats> getReboundsLeaders(
+    public List<PlayerStatsDTO> getReboundsLeaders(
             @RequestParam(defaultValue = "2023-24") String season,
             @RequestParam(defaultValue = "10") int limit) {
         return playerService.getTopRebounders(season, limit);
     }
 
     @GetMapping("/leaders/assists")
-    public List<PlayerSeasonStats> getAssistsLeaders(
+    public List<PlayerStatsDTO> getAssistsLeaders(
             @RequestParam(defaultValue = "2023-24") String season,
             @RequestParam(defaultValue = "10") int limit) {
         return playerService.getTopAssists(season, limit);

@@ -1,7 +1,7 @@
 package com.nba.stats.controller;
 
-import com.nba.stats.model.Player;
-import com.nba.stats.model.PlayerSeasonStats;
+import com.nba.stats.dto.PlayerDTO;
+import com.nba.stats.dto.PlayerStatsDTO;
 import com.nba.stats.service.PlayerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ public class PlayerController {
     }
 
     @GetMapping
-    public List<Player> getAllPlayers(@RequestParam(required = false) String search) {
+    public List<PlayerDTO> getAllPlayers(@RequestParam(required = false) String search) {
         if (search != null && !search.isBlank()) {
             return playerService.searchPlayers(search);
         }
@@ -27,14 +27,14 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Player> getPlayer(@PathVariable Long id) {
-        return playerService.getPlayerById(id)
+    public ResponseEntity<PlayerDTO> getPlayer(@PathVariable Long id) {
+        return playerService.getPlayerDTOById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/stats")
-    public ResponseEntity<List<PlayerSeasonStats>> getPlayerStats(@PathVariable Long id) {
+    public ResponseEntity<List<PlayerStatsDTO>> getPlayerStats(@PathVariable Long id) {
         return playerService.getPlayerById(id)
                 .map(player -> ResponseEntity.ok(playerService.getPlayerStats(id)))
                 .orElse(ResponseEntity.notFound().build());

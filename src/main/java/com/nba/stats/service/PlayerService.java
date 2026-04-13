@@ -1,16 +1,18 @@
 package com.nba.stats.service;
 
+import com.nba.stats.dto.PlayerDTO;
+import com.nba.stats.dto.PlayerStatsDTO;
 import com.nba.stats.model.Player;
-import com.nba.stats.model.PlayerSeasonStats;
 import com.nba.stats.repository.PlayerRepository;
 import com.nba.stats.repository.PlayerSeasonStatsRepository;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
@@ -21,38 +23,42 @@ public class PlayerService {
         this.statsRepository = statsRepository;
     }
 
-    public List<Player> getAllPlayers() {
-        return playerRepository.findAll();
+    public List<PlayerDTO> getAllPlayers() {
+        return playerRepository.findAll().stream().map(PlayerDTO::from).toList();
     }
 
     public Optional<Player> getPlayerById(Long id) {
         return playerRepository.findById(id);
     }
 
-    public List<Player> getPlayersByTeam(Long teamId) {
-        return playerRepository.findByTeamId(teamId);
+    public Optional<PlayerDTO> getPlayerDTOById(Long id) {
+        return playerRepository.findById(id).map(PlayerDTO::from);
     }
 
-    public List<Player> searchPlayers(String name) {
-        return playerRepository.searchByName(name);
+    public List<PlayerDTO> getPlayersByTeam(Long teamId) {
+        return playerRepository.findByTeamId(teamId).stream().map(PlayerDTO::from).toList();
     }
 
-    public List<PlayerSeasonStats> getPlayerStats(Long playerId) {
-        return statsRepository.findByPlayerId(playerId);
+    public List<PlayerDTO> searchPlayers(String name) {
+        return playerRepository.searchByName(name).stream().map(PlayerDTO::from).toList();
     }
 
-    public List<PlayerSeasonStats> getTopScorers(String season, int limit) {
+    public List<PlayerStatsDTO> getPlayerStats(Long playerId) {
+        return statsRepository.findByPlayerId(playerId).stream().map(PlayerStatsDTO::from).toList();
+    }
+
+    public List<PlayerStatsDTO> getTopScorers(String season, int limit) {
         return statsRepository.findTopScorersBySeason(season)
-                .stream().limit(limit).toList();
+                .stream().limit(limit).map(PlayerStatsDTO::from).toList();
     }
 
-    public List<PlayerSeasonStats> getTopRebounders(String season, int limit) {
+    public List<PlayerStatsDTO> getTopRebounders(String season, int limit) {
         return statsRepository.findTopReboundersBySeason(season)
-                .stream().limit(limit).toList();
+                .stream().limit(limit).map(PlayerStatsDTO::from).toList();
     }
 
-    public List<PlayerSeasonStats> getTopAssists(String season, int limit) {
+    public List<PlayerStatsDTO> getTopAssists(String season, int limit) {
         return statsRepository.findTopAssistsBySeason(season)
-                .stream().limit(limit).toList();
+                .stream().limit(limit).map(PlayerStatsDTO::from).toList();
     }
 }

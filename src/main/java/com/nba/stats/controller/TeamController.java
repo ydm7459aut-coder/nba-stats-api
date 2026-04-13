@@ -1,6 +1,6 @@
 package com.nba.stats.controller;
 
-import com.nba.stats.model.Player;
+import com.nba.stats.dto.PlayerDTO;
 import com.nba.stats.model.Team;
 import com.nba.stats.service.PlayerService;
 import com.nba.stats.service.TeamService;
@@ -45,7 +45,7 @@ public class TeamController {
     }
 
     @GetMapping("/{id}/players")
-    public ResponseEntity<List<Player>> getTeamPlayers(@PathVariable Long id) {
+    public ResponseEntity<List<PlayerDTO>> getTeamPlayers(@PathVariable Long id) {
         return teamService.getTeamById(id)
                 .map(team -> ResponseEntity.ok(playerService.getPlayersByTeam(id)))
                 .orElse(ResponseEntity.notFound().build());

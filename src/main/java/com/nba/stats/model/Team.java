@@ -1,5 +1,6 @@
 package com.nba.stats.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ public class Team {
     @Column(nullable = false)
     private String division;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL)
     private List<Player> players = new ArrayList<>();
 

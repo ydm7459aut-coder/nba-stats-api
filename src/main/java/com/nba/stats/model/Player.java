@@ -29,6 +29,7 @@ public class Player {
     @JsonIgnore
     private Team team;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
     private List<PlayerSeasonStats> seasonStats = new ArrayList<>();
 
