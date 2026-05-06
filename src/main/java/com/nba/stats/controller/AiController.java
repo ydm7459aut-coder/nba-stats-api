@@ -1,6 +1,8 @@
 package com.nba.stats.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nba.stats.repository.PlayerSeasonStatsRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,7 +12,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,7 +39,7 @@ public class AiController {
         String question = body.getOrDefault("question", "").strip();
         if (question.isBlank()) return Map.of("error", "Empty question.");
 
-        // Build stats context from DB
+        // Build stats context
         var sb = new StringBuilder("2023-24 NBA Season Player Stats:\n");
         statsRepo.findBySeason("2023-24").forEach(s -> {
             var p = s.getPlayer();
@@ -51,29 +52,36 @@ public class AiController {
                 s.getGamesPlayed()));
         });
 
-        String system = "You are a knowledgeable NBA stats analyst. Answer the user's question using the provided 2023-24 season data. Be concise, factual, and conversational. Do not use markdown headers — plain text only.\n\n" + sb;
+        String systemPrompt = "You are a knowledgeable NBA stats analyst. Answer the user's question using the 2023-24 season data below. Be concise and conversational. No markdown headers.\n\n" + sb;
 
-        String reqBody = mapper.writeValueAsString(Map.of(
-            "model", "claude-sonnet-4-6",
-            "max_tokens", 400,
-            "system", system,
-            "messages", List.of(Map.of("role", "user", "content", question))
-        ));
+        // Build JSON explicitly to guarantee correct types
+        ObjectNode req = mapper.createObjectNode();
+        req.put("model", "claude-opus-4-5-20251101");
+        req.put("max_tokens", 400);
+        req.put("system", systemPrompt);
 
-        HttpRequest req = HttpRequest.newBuilder()
+        ArrayNode messages = req.putArray("messages");
+        ObjectNode msg = messages.addObject();
+        msg.put("role", "user");
+        msg.put("content", question);
+
+        HttpRequest httpReq = HttpRequest.newBuilder()
             .uri(URI.create("https://api.anthropic.com/v1/messages"))
             .header("Content-Type", "application/json")
             .header("x-api-key", apiKey)
             .header("anthropic-version", "2023-06-01")
-            .POST(HttpRequest.BodyPublishers.ofString(reqBody))
+            .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(req)))
             .build();
 
-        HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> resp = http.send(httpReq, HttpResponse.BodyHandlers.ofString());
 
         if (resp.statusCode() == 200) {
             String text = mapper.readTree(resp.body()).path("content").get(0).path("text").asText();
             return Map.of("answer", text);
         }
-        return Map.of("error", "AI returned status " + resp.statusCode());
+
+        // Return actual error detail from Anthropic
+        String detail = mapper.readTree(resp.body()).path("error").path("message").asText(resp.body());
+        return Map.of("error", detail);
     }
 }
