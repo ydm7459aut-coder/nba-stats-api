@@ -41,4 +41,13 @@ if (-not $env:ANTHROPIC_API_KEY) {
 }
 
 Write-Host "Starting NBA Stats at http://localhost:8080 ...`n" -ForegroundColor Cyan
-.\mvnw.cmd spring-boot:run
+
+# Call the Maven wrapper JAR directly — bypasses mvnw.cmd quoting issues
+$wrapperJar = Join-Path $PSScriptRoot ".mvn\wrapper\maven-wrapper.jar"
+$projectDir  = $PSScriptRoot.TrimEnd('\')
+
+& "$javaHome\bin\java.exe" `
+    "-Dmaven.multiModuleProjectDirectory=$projectDir" `
+    -classpath "$wrapperJar" `
+    org.apache.maven.wrapper.MavenWrapperMain `
+    spring-boot:run
