@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBA Stats</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #0d0d0d; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; }
+
+/* Header */
+.header { display: flex; align-items: center; gap: 20px; padding: 0 20px; height: 44px; background: #111; border-bottom: 1px solid #1e1e1e; position: sticky; top: 0; z-index: 10; }
+.logo { font-size: 14px; font-weight: 700; color: #f97316; letter-spacing: 1px; white-space: nowrap; }
+.nav { display: flex; gap: 1px; }
+.nav-btn { padding: 5px 13px; background: none; border: none; color: #666; cursor: pointer; border-radius: 3px; font-size: 12px; font-weight: 500; letter-spacing: 0.3px; }
+.nav-btn:hover { color: #ccc; background: #1a1a1a; }
+.nav-btn.active { color: #f97316; background: #1c1410; }
+
+/* Content */
+.content { max-width: 860px; margin: 0 auto; padding: 12px 20px; }
+
+/* Toolbar */
+.toolbar { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+.filter-btn { padding: 4px 11px; background: #161616; border: 1px solid #222; border-radius: 3px; color: #666; cursor: pointer; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.filter-btn:hover { color: #aaa; border-color: #333; }
+.filter-btn.active { color: #f97316; border-color: #f97316; background: #1c1410; }
+.search { flex: 1; background: #161616; border: 1px solid #222; border-radius: 3px; padding: 5px 10px; color: #e0e0e0; font-size: 12px; outline: none; }
+.search::placeholder { color: #444; }
+.search:focus { border-color: #333; }
+
+/* Column headers */
+.col-header { display: grid; padding: 5px 10px; color: #383838; font-size: 10px; font-weight: 700; letter-spacing: 0.9px; text-transform: uppercase; border-bottom: 1px solid #1a1a1a; }
+
+/* Rows */
+.row { display: grid; align-items: center; padding: 7px 10px; border-bottom: 1px solid #151515; cursor: pointer; transition: background 0.08s; }
+.row:hover { background: #141414; }
+.row:last-child { border-bottom: none; }
+
+.rank { color: #333; font-size: 11px; }
+.name { font-weight: 500; color: #d8d8d8; }
+.tag { color: #444; font-size: 11px; margin-left: 6px; }
+.val { font-weight: 600; color: #f97316; text-align: right; font-size: 13px; }
+.sub { color: #3a3a3a; font-size: 11px; text-align: right; }
+
+/* Mini bar under name */
+.bar-wrap { height: 2px; background: #1a1a1a; border-radius: 1px; margin-top: 3px; }
+.bar { height: 100%; background: #f9731640; border-radius: 1px; transition: width 0.4s ease; }
+
+/* Player detail */
+.player-header { padding: 14px 10px 10px; border-bottom: 1px solid #1a1a1a; }
+.player-header h2 { font-size: 17px; font-weight: 700; color: #fff; }
+.player-header .meta { color: #444; font-size: 12px; margin-top: 3px; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #1a1a1a; margin-top: 1px; }
+.stat-box { background: #0d0d0d; padding: 10px; text-align: center; }
+.stat-box .sv { font-size: 19px; font-weight: 700; color: #f97316; }
+.stat-box .sl { font-size: 10px; color: #3a3a3a; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.6px; }
+.stat-footer { padding: 6px 10px; color: #333; font-size: 11px; border-top: 1px solid #151515; }
+
+/* Back link */
+.back { padding: 7px 10px; color: #f97316; cursor: pointer; font-size: 12px; border-bottom: 1px solid #1a1a1a; }
+.back:hover { color: #ea6c0a; }
+
+/* Tabs */
+.tab { display: none; }
+.tab.active { display: block; }
+
+/* Chat */
+.chat-wrap { display: flex; flex-direction: column; height: calc(100vh - 100px); }
+.chat-msgs { flex: 1; overflow-y: auto; padding-bottom: 4px; }
+.chat-msgs::-webkit-scrollbar { width: 3px; }
+.chat-msgs::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+.msg { padding: 9px 12px; margin-bottom: 1px; line-height: 1.55; font-size: 13px; }
+.msg.user { background: #161616; color: #ccc; border-left: 2px solid #2a2a2a; }
+.msg.ai { background: #111; color: #d0d0d0; border-left: 2px solid #f97316; }
+.msg .ai-tag { font-size: 10px; font-weight: 700; color: #f97316; letter-spacing: 0.8px; margin-bottom: 4px; text-transform: uppercase; }
+.msg .user-tag { font-size: 10px; color: #444; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+.chat-bar { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid #1a1a1a; }
+.chat-in { flex: 1; background: #161616; border: 1px solid #222; border-radius: 3px; padding: 8px 12px; color: #e0e0e0; font-size: 13px; outline: none; }
+.chat-in:focus { border-color: #2e2e2e; }
+.chat-in::placeholder { color: #3a3a3a; }
+.ask-btn { background: #f97316; border: none; border-radius: 3px; padding: 8px 16px; color: #000; font-weight: 700; cursor: pointer; font-size: 12px; letter-spacing: 0.3px; }
+.ask-btn:hover { background: #ea6c0a; }
+.ask-btn:disabled { background: #1e1e1e; color: #444; cursor: not-allowed; }
+.thinking { color: #444; font-style: italic; }
+
+/* Suggestions */
+.suggestions { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 0; }
+.suggestion { padding: 4px 10px; background: #161616; border: 1px solid #222; border-radius: 3px; color: #666; font-size: 11px; cursor: pointer; }
+.suggestion:hover { color: #f97316; border-color: #f97316; background: #1c1410; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">NBA STATS</span>
+  <nav class="nav">
+    <button class="nav-btn active" data-tab="leaders" onclick="go('leaders',this)">Leaders</button>
+    <button class="nav-btn" data-tab="players" onclick="go('players',this)">Players</button>
+    <button class="nav-btn" data-tab="teams" onclick="go('teams',this)">Teams</button>
+    <button class="nav-btn" data-tab="ai" onclick="go('ai',this)">Ask AI</button>
+  </nav>
+</div>
+
+<div class="content">
+
+  <!-- LEADERS -->
+  <div id="tab-leaders" class="tab active">
+    <div class="toolbar">
+      <button class="filter-btn active" onclick="setStat('points',this)">Points</button>
+      <button class="filter-btn" onclick="setStat('rebounds',this)">Rebounds</button>
+      <button class="filter-btn" onclick="setStat('assists',this)">Assists</button>
+    </div>
+    <div class="col-header" style="grid-template-columns:28px 1fr 64px">#<span>Player</span><span style="text-align:right">Per Game</span></div>
+    <div id="leaders-body"></div>
+  </div>
+
+  <!-- PLAYERS -->
+  <div id="tab-players" class="tab">
+    <div class="toolbar">
+      <input class="search" placeholder="Search players…" oninput="searchP(this.value)">
+    </div>
+    <div class="col-header" style="grid-template-columns:28px 1fr 52px 40px">#<span>Player</span><span style="text-align:right">Team</span><span style="text-align:right">Pos</span></div>
+    <div id="players-body"></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div id="tab-teams" class="tab">
+    <div class="toolbar">
+      <button class="filter-btn active" onclick="setConf('',this)">All</button>
+      <button class="filter-btn" onclick="setConf('Eastern',this)">East</button>
+      <button class="filter-btn" onclick="setConf('Western',this)">West</button>
+    </div>
+    <div class="col-header" style="grid-template-columns:1fr 60px 80px">Team<span style="text-align:right">Conf</span><span style="text-align:right">Division</span></div>
+    <div id="teams-body"></div>
+  </div>
+
+  <!-- AI -->
+  <div id="tab-ai" class="tab">
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="msg ai"><div class="ai-tag">NBA AI</div>Ask me anything about the 2023-24 season — scoring leaders, player stats, team rosters, comparisons, and more.</div>
+        <div class="suggestions">
+          <span class="suggestion" onclick="ask('Who leads the league in scoring?')">Who leads scoring?</span>
+          <span class="suggestion" onclick="ask('Compare LeBron James and Nikola Jokic')">LeBron vs Jokic</span>
+          <span class="suggestion" onclick="ask('Who are the best defenders this season?')">Best defenders</span>
+          <span class="suggestion" onclick="ask('Show me the Lakers roster stats')">Lakers stats</span>
+        </div>
+      </div>
+      <div class="chat-bar">
+        <input class="chat-in" id="chat-in" placeholder="Ask about players, stats, teams…" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="ask-btn" id="ask-btn" onclick="sendMsg()">Ask</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let statType = 'points';
+let conf = '';
+
+function go(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'leaders') loadLeaders();
+  if (tab === 'players') loadPlayers();
+  if (tab === 'teams') loadTeams();
+}
+
+// --- Leaders ---
+async function loadLeaders() {
+  const res = await fetch('/api/stats/leaders/' + statType);
+  const data = await res.json();
+  const key = statType === 'points' ? 'pointsPerGame' : statType === 'rebounds' ? 'reboundsPerGame' : 'assistsPerGame';
+  const max = Math.max(...data.map(d => d[key]));
+  document.getElementById('leaders-body').innerHTML = data.map((p, i) => `
+    <div class="row" style="grid-template-columns:28px 1fr 64px" onclick="openPlayer(${p.playerId})">
+      <span class="rank">${i+1}</span>
+      <div>
+        <span class="name">${p.playerName}</span><span class="tag">${p.teamAbbreviation}</span>
+        <div class="bar-wrap"><div class="bar" style="width:${(p[key]/max*100).toFixed(0)}%"></div></div>
+      </div>
+      <span class="val">${p[key]}</span>
+    </div>`).join('');
+}
+
+function setStat(type, btn) {
+  statType = type;
+  document.querySelectorAll('#tab-leaders .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadLeaders();
+}
+
+// --- Players ---
+let pTimer;
+async function loadPlayers(q = '') {
+  const url = q ? `/api/players?search=${encodeURIComponent(q)}` : '/api/players';
+  const data = await fetch(url).then(r => r.json());
+  document.getElementById('players-body').innerHTML = data.map((p, i) => `
+    <div class="row" style="grid-template-columns:28px 1fr 52px 40px" onclick="openPlayer(${p.id})">
+      <span class="rank">${i+1}</span>
+      <span class="name">${p.fullName}</span>
+      <span class="sub">${p.teamAbbreviation || '—'}</span>
+      <span class="sub">${p.position}</span>
+    </div>`).join('');
+}
+
+function searchP(v) {
+  clearTimeout(pTimer);
+  pTimer = setTimeout(() => loadPlayers(v), 220);
+}
+
+// --- Teams ---
+async function loadTeams() {
+  const url = conf ? `/api/teams?conference=${conf}` : '/api/teams';
+  const data = await fetch(url).then(r => r.json());
+  document.getElementById('teams-body').innerHTML = data.map(t => `
+    <div class="row" style="grid-template-columns:1fr 60px 80px" onclick="openTeam(${t.id},'${t.city} ${t.name}')">
+      <div><span class="name">${t.city} ${t.name}</span><span class="tag">${t.abbreviation}</span></div>
+      <span class="sub">${t.conference}</span>
+      <span class="sub">${t.division}</span>
+    </div>`).join('');
+}
+
+function setConf(c, btn) {
+  conf = c;
+  document.querySelectorAll('#tab-teams .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadTeams();
+}
+
+async function openTeam(id, name) {
+  const data = await fetch(`/api/teams/${id}/players`).then(r => r.json());
+  document.getElementById('teams-body').innerHTML =
+    `<div class="back" onclick="loadTeams()">← All Teams</div>
+     <div class="col-header" style="grid-template-columns:28px 1fr 52px 40px;margin-top:4px">#<span>${name}</span><span style="text-align:right">#</span><span style="text-align:right">Pos</span></div>` +
+    data.map((p, i) => `
+      <div class="row" style="grid-template-columns:28px 1fr 52px 40px" onclick="openPlayer(${p.id})">
+        <span class="rank">${i+1}</span>
+        <span class="name">${p.fullName}</span>
+        <span class="sub">#${p.jerseyNumber}</span>
+        <span class="sub">${p.position}</span>
+      </div>`).join('');
+}
+
+// --- Player detail ---
+async function openPlayer(id) {
+  const [p, stats] = await Promise.all([
+    fetch(`/api/players/${id}`).then(r => r.json()),
+    fetch(`/api/players/${id}/stats`).then(r => r.json())
+  ]);
+  const s = stats[0];
+  const activeTab = document.querySelector('.tab.active').id.replace('tab-','');
+  const bodyId = activeTab === 'players' ? 'players-body' : activeTab === 'teams' ? 'teams-body' : 'leaders-body';
+  const backFn = activeTab === 'players' ? 'loadPlayers()' : activeTab === 'teams' ? 'loadTeams()' : 'loadLeaders()';
+
+  document.getElementById(bodyId).innerHTML =
+    `<div class="back" onclick="${backFn}">← Back</div>
+     <div class="player-header">
+       <h2>${p.fullName}</h2>
+       <div class="meta">${p.teamCity} ${p.teamName} · #${p.jerseyNumber} · ${p.position}</div>
+     </div>` +
+    (s ? `
+     <div class="stat-grid">
+       ${box('PPG', s.pointsPerGame)} ${box('RPG', s.reboundsPerGame)}
+       ${box('APG', s.assistsPerGame)} ${box('SPG', s.stealsPerGame)}
+       ${box('BPG', s.blocksPerGame)} ${box('FG%', pct(s.fieldGoalPct))}
+       ${box('3P%', pct(s.threePointPct))} ${box('FT%', pct(s.freeThrowPct))}
+     </div>
+     <div class="stat-footer">${s.gamesPlayed} GP · ${s.minutesPerGame} MPG · ${s.season}</div>`
+    : '<div style="padding:20px 10px;color:#333">No stats available</div>');
+}
+
+function box(l, v) { return `<div class="stat-box"><div class="sv">${v}</div><div class="sl">${l}</div></div>`; }
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+
+// --- AI Chat ---
+async function sendMsg() {
+  const inp = document.getElementById('chat-in');
+  const q = inp.value.trim();
+  if (!q) return;
+  inp.value = '';
+  await ask(q);
+}
+
+async function ask(q) {
+  const btn = document.getElementById('ask-btn');
+  btn.disabled = true;
+  addMsg('user', q);
+  const lid = addMsg('ai', '<span class="thinking">Thinking…</span>');
+  try {
+    const res = await fetch('/api/ai/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q })
+    });
+    const data = await res.json();
+    document.getElementById(lid).innerHTML =
+      `<div class="msg ai"><div class="ai-tag">NBA AI</div>${data.answer || data.error || 'No response.'}</div>`;
+  } catch {
+    document.getElementById(lid).innerHTML =
+      `<div class="msg ai"><div class="ai-tag">NBA AI</div>Could not reach AI service.</div>`;
+  }
+  btn.disabled = false;
+  document.getElementById('chat-in').focus();
+}
+
+function addMsg(role, html) {
+  const id = 'msg-' + Date.now() + Math.random();
+  const el = document.createElement('div');
+  el.id = id;
+  const tag = role === 'ai' ? '<div class="ai-tag">NBA AI</div>' : '<div class="user-tag">You</div>';
+  el.innerHTML = `<div class="msg ${role}">${tag}${html}</div>`;
+  document.getElementById('chat-msgs').appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return id;
+}
+
+loadLeaders();
+</script>
+</body>
+</html>
